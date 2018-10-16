@@ -27,10 +27,11 @@ import java.util.List;
 @Repository
 public class AlbumsBean {
 
-    @PersistenceContext
+    @PersistenceContext(unitName = "albums")
+//    @PersistenceContext
     private EntityManager entityManager;
 
-    @Transactional
+//    @Transactional
     public void addAlbum(Album album) {
         entityManager.persist(album);
     }

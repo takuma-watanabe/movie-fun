@@ -18,6 +18,11 @@ package org.superbiz.moviefun;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
+import org.superbiz.moviefun.albums.Album;
 import org.superbiz.moviefun.movies.Movie;
 import org.superbiz.moviefun.movies.MoviesBean;
 
@@ -38,6 +43,12 @@ public class ActionServlet extends HttpServlet {
     private static final long serialVersionUID = -5832176047021911038L;
 
     public static int PAGE_SIZE = 5;
+
+    private final PlatformTransactionManager moviesPlatformTransactionManager;
+
+    public ActionServlet(PlatformTransactionManager moviesPlatformTransactionManager) {
+        this.moviesPlatformTransactionManager = moviesPlatformTransactionManager;
+    }
 
     @EJB
     private MoviesBean moviesBean;
@@ -65,7 +76,10 @@ public class ActionServlet extends HttpServlet {
 
             Movie movie = new Movie(title, director, genre, rating, year);
 
-            moviesBean.addMovie(movie);
+//            moviesBean.addMovie(movie);
+            addMovie(movie);
+
+
             response.sendRedirect("moviefun");
             return;
 
@@ -136,5 +150,20 @@ public class ActionServlet extends HttpServlet {
 
         request.getRequestDispatcher("WEB-INF/moviefun.jsp").forward(request, response);
     }
+
+    private void addMovie(Movie movie) {
+
+        TransactionCallback<Object> transactionCallback = new TransactionCallback<Object>() {
+            @Override
+            public Object doInTransaction(TransactionStatus status) {
+                moviesBean.addMovie(movie);
+
+                return null;
+            }
+        };
+
+        new TransactionTemplate(moviesPlatformTransactionManager).execute(transactionCallback);
+    }
+
 
 }
